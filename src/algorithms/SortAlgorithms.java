@@ -1,7 +1,5 @@
 package algorithms;
 
-import java.util.Arrays;
-
 public class SortAlgorithms {
 	public static boolean isSorted(int array[]) {
 		for (int i = 0; i < array.length - 1; i++) {
