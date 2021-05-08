@@ -9,7 +9,7 @@ public class Graph {
 	public int m;
 	
 	// Edges are stored in a adjacency list, double nodes contain the end vertex and the weight
-	DoubleNode<Integer, Double>[] edges;
+	public DoubleNode<Integer, Double>[] edges;
 	
 	public Graph() {
 		
@@ -38,7 +38,7 @@ public class Graph {
 						
 						next++;
 						
-						if (vertex == n) {
+						if (vertex == n - 1) {
 							next = -1;
 						}
 						

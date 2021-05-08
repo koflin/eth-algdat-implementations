@@ -145,4 +145,13 @@ class Heap {
 		return value.key;
 	}
 
+	public int[] toArray() {
+		int[] array = new int[n];
+		
+		for (int i = 0; i < n; i++) {
+			array[i] = values[i].key;
+		}
+		
+		return array;
+	}
 }

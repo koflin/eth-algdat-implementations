@@ -1,7 +1,6 @@
 package algorithms;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -20,26 +19,32 @@ public class GraphAlgorithms {
 	public static int[] depthFirstSearch(Graph g) {
 		int[] topOrder = new int[g.n];
 		boolean[] marked = new boolean[g.n];
+		int counter = 0;
 		
 		for(int v : g.getAllVertices()) {
 			if (!marked[v]) {
-				dfsVisit(g, v, topOrder, marked);
+				counter = dfsVisit(g, v, topOrder, marked, counter);
 			}
 		}
 		
 		return topOrder;
 	}
 	
-	private static void dfsVisit(Graph g, int v, int[] topOrder, boolean[] marked) {
+	private static int dfsVisit(Graph g, int v, int[] topOrder, boolean[] marked, int counter) {
 		marked[v] = true;
 		
+		topOrder[counter] = v;
+		counter++;
+		
 		// Pre number
-		for(Edge e : g.getAllEdges()) {
+		for(Edge e : g.getSuccessors(v)) {
 			if (!marked[e.to]) {
-				dfsVisit(g, e.to, topOrder, marked);
+				counter = dfsVisit(g, e.to, topOrder, marked, counter);
 			}
 		}
 		// Post number
+		
+		return counter;
 	}
 
 	/**
@@ -48,15 +53,18 @@ public class GraphAlgorithms {
 	 * @param s
 	 * @return
 	 */
-	public static Integer[] breadthFirstSearch(Graph g, int s) {
-		Integer[] par = new Integer[g.n];
+	public static int[] breadthFirstSearch(Graph g, int s) {
+		int[] par = new int[g.n];
+		Arrays.fill(par, Integer.MAX_VALUE);
+		par[0] = 0;
+		
 		boolean[] marked = new boolean[g.n];
 		// Queue of vertices to visit
 		LinkedList<Integer> S = new LinkedList<Integer>();
 		S.add(s);
 		
 		while(S.size() > 0) {
-			int v = S.getLast();
+			int v = S.removeLast();
 			
 			if (!marked[v]) {
 				marked[v] = true;
@@ -64,7 +72,7 @@ public class GraphAlgorithms {
 				for (Edge e : g.getSuccessors(v)) {
 					S.addFirst(e.to);
 					
-					if (par[e.to] == null) {
+					if (par[e.to] == Integer.MAX_VALUE) {
 						par[e.to] = v;
 					}
 				}
@@ -93,6 +101,7 @@ public class GraphAlgorithms {
 		
 		while(S.size() != g.n) {
 			int u = H.extractMin();
+			System.out.println(H);
 			S.add(u);
 			
 			for (Edge e : g.getSuccessors(u)) {
@@ -171,7 +180,7 @@ public class GraphAlgorithms {
 					for (Edge e : g.getSuccessors(v)) {
 						// Different component
 						if (!components.same(v, e.to)) {
-							if (min == null && min.weight > e.weight) {
+							if (min == null || min.weight > e.weight) {
 								min = e;
 							}
 						}
@@ -321,9 +330,37 @@ public class GraphAlgorithms {
 		modified.n = g.n + 1;
 		modified.m = g.m + g.n;
 		
-		DoubleNode<Integer, Double>[] newEdges = new DoubleNode<Integer, Double>[modified.n];
+		@SuppressWarnings("unchecked")
+		DoubleNode<Integer, Double>[] newEdges = new DoubleNode[modified.n];
+		
+		// Copy old edges
+		for (int u : g.getAllVertices()) {
+			for (Edge e : g.getSuccessors(u)) {
+				DoubleNode<Integer, Double> newHead = new DoubleNode<Integer, Double>(e.to, e.weight);
+				
+				newHead.next = newEdges[u];
+				newEdges[u] = newHead;
+			}
+		}
+		
+		// Insert zero edges
+		for (int v = 0; v < g.n; v++) {
+			DoubleNode<Integer, Double> newHead = new DoubleNode<Integer, Double>(v, 0d);
+			
+			newHead.next = newEdges[modified.n - 1];
+			newEdges[modified.n - 1] = newHead;
+		}
+		
+		modified.edges = newEdges;
 		
 		double[] h = new double[g.n];
+		
+		// Perform Bellman-Ford for height
+		double[] distances = bellmanFord(modified, modified.n - 1);
+		
+		for (int v = 0; v < g.n; v++) {
+			h[v] = distances[v];
+		}
 		
 		// Change weights
 		for (Edge e : modified.getAllEdges()) {
